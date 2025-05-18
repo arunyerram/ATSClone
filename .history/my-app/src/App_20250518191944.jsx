@@ -7,14 +7,14 @@ function App() {
   const [newCandidateName, setNewCandidateName] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:5000/candidates')
+    fetch('https://atsclone-backend.onrender.com')
       .then(res => res.json())
       .then(data => setCandidates(data));
   }, []);
 
   const addCandidate = () => {
     if (!newCandidateName) return;
-    fetch('http://localhost:5000/candidates', {
+    fetch('https://atsclone-backend.onrender.com', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: newCandidateName })
