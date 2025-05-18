@@ -8,7 +8,7 @@ function App() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const API_URL = process.env.REACT_APP_API_URL || 'https://atsclone-3.onrender.com';
+  const API_URL = import.meta.env.VITE_API_URL || 'https://atsclone-3.onrender.com';
 
   useEffect(() => {
     const fetchCandidates = async () => {
