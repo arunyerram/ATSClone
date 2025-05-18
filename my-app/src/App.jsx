@@ -5,38 +5,63 @@ const stages = ["Applied", "Interview Scheduled", "Selected", "Rejected"];
 function App() {
   const [candidates, setCandidates] = useState([]);
   const [newCandidateName, setNewCandidateName] = useState('');
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const API_URL = process.env.REACT_APP_API_URL || 'https://atsclone-3.onrender.com';
 
   useEffect(() => {
-    fetch('https://atsclone-3.onrender.com')
-      .then(res => res.json())
-      .then(data => setCandidates(data));
-  }, []);
+    const fetchCandidates = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(API_URL);
+        if (!res.ok) throw new Error('Failed to fetch candidates');
+        const data = await res.json();
+        setCandidates(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const addCandidate = () => {
+    fetchCandidates();
+  }, [API_URL]);
+
+  const addCandidate = async () => {
     if (!newCandidateName) return;
-    fetch('https://atsclone-3.onrender.com', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newCandidateName })
-    })
-    .then(res => res.json())
-    .then(candidate => {
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newCandidateName })
+      });
+      if (!res.ok) throw new Error('Failed to add candidate');
+      const candidate = await res.json();
       setCandidates([...candidates, candidate]);
       setNewCandidateName('');
-    });
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
-  const updateCandidateStatus = (id, status) => {
-    fetch(`https://atsclone-3.onrender.com/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
-    })
-    .then(res => res.json())
-    .then(updatedCandidate => {
+  const updateCandidateStatus = async (id, status) => {
+    try {
+      const res = await fetch(`${API_URL}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      if (!res.ok) throw new Error('Failed to update candidate status');
+      const updatedCandidate = await res.json();
       setCandidates(candidates.map(c => c.id === id ? updatedCandidate : c));
-    });
+    } catch (err) {
+      setError(err.message);
+    }
   };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <div style={{ display: 'flex', justifyContent: 'space-around' }}>
@@ -53,7 +78,12 @@ function App() {
           ))}
           {stage === 'Applied' && (
             <div>
-              <input value={newCandidateName} onChange={e => setNewCandidateName(e.target.value)} placeholder="Add candidate" />
+              <input 
+                value={newCandidateName} 
+                onChange={e => setNewCandidateName(e.target.value)} 
+                placeholder="Add candidate"
+                onKeyPress={e => e.key === 'Enter' && addCandidate()}
+              />
               <button onClick={addCandidate}>Add</button>
             </div>
           )}
